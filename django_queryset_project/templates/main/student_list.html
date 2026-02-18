@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %} | Students{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Students <span class="badge bg-secondary">{{ count }}</span></h2>
+  <a href="{% url 'student_create' %}" class="btn btn-primary">+ Add Student</a>
+</div>
+
+<!-- Filter Form — demonstrates QuerySet filter lookups -->
+<div class="card p-3 mb-4">
+  <h6 class="text-muted mb-2">🔍 Filter (QuerySet Lookups)</h6>
+  <form method="get" class="row g-2">
+    <div class="col-md-3">
+      <input type="text" name="name" class="form-control form-control-sm" placeholder="Name (icontains)" value="{{ filters.name }}">
+    </div>
+    <div class="col-md-2">
+      <input type="number" name="min_age" class="form-control form-control-sm" placeholder="Min age (gte)" value="{{ filters.min_age }}">
+    </div>
+    <div class="col-md-2">
+      <input type="number" name="max_age" class="form-control form-control-sm" placeholder="Max age (lte)" value="{{ filters.max_age }}">
+    </div>
+    <div class="col-md-2">
+      <select name="course" class="form-select form-select-sm">
+        <option value="">All courses</option>
+        {% for c in courses %}
+        <option value="{{ c.id }}" {% if filters.course == c.id|stringformat:"s" %}selected{% endif %}>{{ c.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="order" class="form-select form-select-sm">
+        <option value="name">Name A→Z</option>
+        <option value="-name">Name Z→A</option>
+        <option value="age">Age ↑</option>
+        <option value="-age">Age ↓</option>
+        <option value="course__title">Course</option>
+      </select>
+    </div>
+    <div class="col-md-1">
+      <button type="submit" class="btn btn-sm btn-dark w-100">Go</button>
+    </div>
+  </form>
+  <small class="text-muted mt-2 d-block">
+    QuerySet: <span class="qs-label">Student.objects.filter(name__icontains=...).filter(age__gte=...).filter(age__lte=...).order_by(...)</span>
+  </small>
+</div>
+
+<div class="card">
+  <table class="table table-hover mb-0">
+    <thead class="table-dark">
+      <tr><th>#</th><th>Name</th><th>Age</th><th>Email</th><th>Course</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td>{{ s.id }}</td>
+        <td>{{ s.name }}</td>
+        <td>{{ s.age }}</td>
+        <td>{{ s.email|default:"—" }}</td>
+        <td><a href="{% url 'course_detail' s.course.id %}">{{ s.course.title }}</a></td>
+        <td>
+          <a href="{% url 'student_update' s.id %}" class="btn btn-xs btn-outline-primary btn-sm">Edit</a>
+          <a href="{% url 'student_delete' s.id %}" class="btn btn-xs btn-outline-danger btn-sm">Delete</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-center text-muted py-4">No students match your filters.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

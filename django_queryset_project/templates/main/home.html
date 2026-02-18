@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %} | Dashboard{% endblock %}
+{% block content %}
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="display-4 text-primary fw-bold">{{ total_students }}</div>
+      <div class="text-muted">Total Students</div>
+      <small class="qs-label mt-1">Student.objects.count()</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="display-4 text-success fw-bold">{{ total_courses }}</div>
+      <div class="text-muted">Total Courses</div>
+      <small class="qs-label mt-1">Course.objects.count()</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="display-4 text-warning fw-bold">{{ avg_age|floatformat:1 }}</div>
+      <div class="text-muted">Average Age</div>
+      <small class="qs-label mt-1">aggregate(Avg('age'))</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="display-4 text-danger fw-bold">{{ oldest.age }}</div>
+      <div class="text-muted">Oldest Student ({{ oldest.name }})</div>
+      <small class="qs-label mt-1">order_by('-age').first()</small>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-7">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">All Students <span class="qs-label">objects.all()</span></h5>
+        <a href="{% url 'student_create' %}" class="btn btn-sm btn-primary">+ Add</a>
+      </div>
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-dark"><tr><th>#</th><th>Name</th><th>Age</th><th>Course</th></tr></thead>
+        <tbody>
+          {% for s in all_students %}
+          <tr>
+            <td>{{ s.id }}</td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.age }}</td>
+            <td><a href="{% url 'course_detail' s.course.id %}">{{ s.course.title }}</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-muted">No students yet. Run <code>python manage.py seed</code></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Courses <span class="qs-label">annotate(Count)</span></h5>
+        <a href="{% url 'course_create' %}" class="btn btn-sm btn-success">+ Add</a>
+      </div>
+      {% for c in all_courses %}
+      <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+        <a href="{% url 'course_detail' c.id %}">{{ c.title }}</a>
+        <span class="badge bg-primary">{{ c.student_count }} students</span>
+      </div>
+      {% empty %}
+      <p class="text-muted">No courses yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="card p-3 mt-4">
+      <h5>Quick Links</h5>
+      <ul class="list-unstyled mb-0">
+        <li><a href="{% url 'queryset_demo' %}">📊 Live QuerySet Demo</a> — see all operations with real results</li>
+        <li class="mt-2"><a href="{% url 'student_list' %}">🔍 Filter Students</a> — interactive filtering UI</li>
+        <li class="mt-2"><a href="/admin/">🛠 Django Admin</a> — admin: <code>admin / admin</code></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %} | QuerySet Demo{% endblock %}
+{% block content %}
+
+<h2 class="mb-1">📊 Live QuerySet Demo</h2>
+<p class="text-muted mb-4">Every section shows the Django ORM code and the actual data it returns right now.</p>
+
+{% macro section title code %}{% endmacro %}
+
+<!-- ── Basic Reads ──────────────────────────────────────── -->
+<div class="card p-3 mb-4">
+  <h5>1. Basic Reads</h5>
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <pre>Student.objects.all()</pre>
+      <table class="table table-sm table-bordered">
+        <thead><tr><th>Name</th><th>Age</th><th>Course</th></tr></thead>
+        <tbody>
+          {% for s in demo.all_students %}
+          <tr><td>{{ s.name }}</td><td>{{ s.age }}</td><td>{{ s.course__title }}</td></tr>
+          {% empty %}<tr><td colspan="3" class="text-muted">Empty — run seed command</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-md-3">
+      <pre>Student.objects.count()</pre>
+      <div class="alert alert-info py-2">{{ demo.count }}</div>
+
+      <pre>Student.objects.first()</pre>
+      <div class="alert alert-info py-2">{{ demo.first }}</div>
+
+      <pre>Student.objects.last()</pre>
+      <div class="alert alert-info py-2">{{ demo.last }}</div>
+    </div>
+
+    <div class="col-md-3">
+      <pre>Student.objects.exists()</pre>
+      <div class="alert alert-info py-2">{{ demo.has_students }}</div>
+
+      <pre># age &lt; 18 exists?
+.filter(age__lt=18).exists()</pre>
+      <div class="alert alert-info py-2">{{ demo.has_young }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Filter Lookups ──────────────────────────────────── -->
+<div class="card p-3 mb-4">
+  <h5>2. Filter Lookups (__ syntax)</h5>
+  <div class="row g-3">
+
+    <div class="col-md-4">
+      <pre>Student.objects.filter(age__gt=20)</pre>
+      <ul class="list-group list-group-flush">
+        {% for s in demo.age_gt_20 %}
+        <li class="list-group-item py-1">{{ s.name }} — {{ s.age }}</li>
+        {% empty %}<li class="list-group-item text-muted">none</li>{% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-md-4">
+      <pre>Student.objects.filter(
+  name__icontains='a')</pre>
+      <ul class="list-group list-group-flush">
+        {% for s in demo.name_contains_a %}
+        <li class="list-group-item py-1">{{ s.name }} — {{ s.age }}</li>
+        {% empty %}<li class="list-group-item text-muted">none</li>{% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-md-4">
+      <pre>Student.objects.filter(
+  age__range=(18, 23))</pre>
+      <ul class="list-group list-group-flush">
+        {% for s in demo.age_range %}
+        <li class="list-group-item py-1">{{ s.name }} — {{ s.age }}</li>
+        {% empty %}<li class="list-group-item text-muted">none</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ── Q Objects ──────────────────────────────────────── -->
+<div class="card p-3 mb-4">
+  <h5>3. Q Objects (OR / NOT logic)</h5>
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <pre>from django.db.models import Q
+Student.objects.filter(
+    Q(age__lt=20) | Q(age__gt=24))</pre>
+      <p class="text-muted small">OR: age &lt; 20 or age &gt; 24</p>
+      <ul class="list-group list-group-flush">
+        {% for s in demo.q_or %}
+        <li class="list-group-item py-1">{{ s.name }} — {{ s.age }}</li>
+        {% empty %}<li class="list-group-item text-muted">none</li>{% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-md-6">
+      <pre>Student.objects.filter(
+    ~Q(course__title='Python'))</pre>
+      <p class="text-muted small">NOT: exclude Python course students</p>
+      <ul class="list-group list-group-flush">
+        {% for s in demo.q_not %}
+        <li class="list-group-item py-1">{{ s.name }} — {{ s.age }} — {{ s.course__title }}</li>
+        {% empty %}<li class="list-group-item text-muted">none</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ── Aggregation ────────────────────────────────────── -->
+<div class="card p-3 mb-4">
+  <h5>4. Aggregation</h5>
+  <pre>from django.db.models import Avg, Max, Min, Count
+Student.objects.aggregate(
+    avg_age=Avg('age'), max_age=Max('age'),
+    min_age=Min('age'), total=Count('id')
+)</pre>
+  <div class="row g-3 mt-1">
+    <div class="col-6 col-md-3"><div class="card bg-light p-2 text-center"><strong>{{ demo.aggregates.avg_age|floatformat:1 }}</strong><br><small>avg_age</small></div></div>
+    <div class="col-6 col-md-3"><div class="card bg-light p-2 text-center"><strong>{{ demo.aggregates.max_age }}</strong><br><small>max_age</small></div></div>
+    <div class="col-6 col-md-3"><div class="card bg-light p-2 text-center"><strong>{{ demo.aggregates.min_age }}</strong><br><small>min_age</small></div></div>
+    <div class="col-6 col-md-3"><div class="card bg-light p-2 text-center"><strong>{{ demo.aggregates.total }}</strong><br><small>total</small></div></div>
+  </div>
+</div>
+
+<!-- ── Annotation ─────────────────────────────────────── -->
+<div class="card p-3 mb-4">
+  <h5>5. Annotation (per-row computed field)</h5>
+  <pre>Course.objects.annotate(student_count=Count('students'))</pre>
+  <table class="table table-sm table-bordered mt-2">
+    <thead><tr><th>Course</th><th>student_count</th></tr></thead>
+    <tbody>
+      {% for c in demo.courses_annotated %}
+      <tr><td>{{ c.title }}</td><td>{{ c.student_count }}</td></tr>
+      {% empty %}<tr><td colspan="2" class="text-muted">Empty</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── values / values_list ───────────────────────────── -->
+<div class="card p-3 mb-4">
+  <h5>6. values() and values_list()</h5>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <pre>Student.objects.values('name', 'age')</pre>
+      <p class="text-muted small">Returns list of dicts (no model instances)</p>
+      <code class="d-block" style="font-size:.8rem">{{ demo.values }}</code>
+    </div>
+    <div class="col-md-6">
+      <pre>Student.objects.values_list(
+    'name', flat=True)</pre>
+      <p class="text-muted small">Returns flat list of values</p>
+      <code class="d-block" style="font-size:.8rem">{{ demo.values_list }}</code>
+    </div>
+  </div>
+</div>
+
+<!-- ── Ordering ───────────────────────────────────────── -->
+<div class="card p-3 mb-4">
+  <h5>7. Ordering</h5>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <pre>Student.objects.order_by('age')</pre>
+      <ul class="list-group list-group-flush">
+        {% for s in demo.ordered_asc %}
+        <li class="list-group-item py-1">{{ s.name }} — {{ s.age }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <pre>Student.objects.order_by('-age')</pre>
+      <ul class="list-group list-group-flush">
+        {% for s in demo.ordered_desc %}
+        <li class="list-group-item py-1">{{ s.name }} — {{ s.age }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

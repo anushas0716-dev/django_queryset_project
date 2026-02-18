@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %} | Courses{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Courses</h2>
+  <a href="{% url 'course_create' %}" class="btn btn-success">+ Add Course</a>
+</div>
+
+<div class="row g-3">
+  {% for c in courses %}
+  <div class="col-md-4">
+    <div class="card p-3 h-100">
+      <h5>{{ c.title }}</h5>
+      <p class="text-muted small">{{ c.description|default:"No description." }}</p>
+      <div class="mt-auto d-flex justify-content-between align-items-center">
+        <span class="badge bg-primary">{{ c.student_count }} students</span>
+        <div>
+          <a href="{% url 'course_detail' c.id %}" class="btn btn-sm btn-outline-dark">View</a>
+          <a href="{% url 'course_delete' c.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-muted">No courses yet. <a href="{% url 'course_create' %}">Add one</a> or run <code>python manage.py seed</code>.</p>
+  {% endfor %}
+</div>
+{% endblock %}
